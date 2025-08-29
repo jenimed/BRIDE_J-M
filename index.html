@@ -20,20 +20,25 @@
     }
     h1 { margin-bottom: 10px; }
     p { margin: 5px 0 20px; }
-    input, button {
+    input, button, select {
       padding: 12px; font-size: 16px; margin: 10px auto; border-radius: 20px;
-      border: 1px solid #ccc; width: 70%; max-width: 420px; display: block;
+      border: 1px solid #ccc; width: 70%; max-width: 520px; display: block;
     }
-    #result { margin-top: 20px; font-weight: bold; }
+    #step2 #encabezado p { margin: 8px 0; }
+    .muted { color:#666; font-weight: normal; }
     .error { color: #b00020; font-weight: normal; }
-    .ok { color: #0a7a30; font-weight: normal; }
     button { cursor: pointer; background-color: #333; color: white; border: none; }
     button:hover { background-color: #555; }
+    .grid { width: 90%; max-width: 820px; margin: 0 auto; text-align: left; }
+    .grid .row { display: grid; grid-template-columns: 2.2fr 1.1fr 1fr; gap: 10px; align-items: center; margin: 8px 0; }
+    .controls { display:flex; gap:8px; justify-content:center; margin-top: 8px; }
+    .nameInput { width: 100%; border-radius: 10px; }
     @media (max-width: 900px) {
       .container { flex-direction: column; }
       .imagen { min-height: 40vh; }
       .contenido { padding: 32px; }
-      input, button { width: 100%; }
+      input, button, select { width: 100%; }
+      .grid .row { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -43,154 +48,180 @@
 
   <div class="contenido">
     <h1>CONFIRMAR ASISTENCIA</h1>
-    <p>Estamos muy emocionados de celebrar este día tan especial con nuestros familiares y amigos más cercanos. Por favor, confirma tu asistencia.</p>
-    <p><strong>Fecha límite para confirmar:</strong> 10/10/2025</p>
 
-    <input type="text" id="codigo" placeholder="Ingresa tu código de invitado" autocomplete="one-time-code" />
-    <button id="btnConsultar">Consultar</button>
+    <!-- Paso 1 -->
+    <div id="step1">
+      <p>Por favor ingresa tu código de invitado.</p>
+      <input type="text" id="codigo" placeholder="Ingresa tu código de invitado" autocomplete="one-time-code" />
+      <button id="btnContinuar">Continuar</button>
+      <div id="msg1" class="error"></div>
+    </div>
 
-    <div id="result" aria-live="polite"></div>
-    <p>¡Gracias por acompañarnos en este momento tan importante de nuestras vidas!</p>
+    <!-- Paso 2 -->
+    <div id="step2" style="display:none;">
+      <div id="encabezado"></div>
+
+      <div id="detalles" class="grid"></div>
+
+      <div class="controls">
+        <button id="btnConfirmarTodos">Confirmar todos</button>
+        <button id="btnReiniciarTodos">Reiniciar a pendiente</button>
+      </div>
+
+      <div id="foot" class="muted" style="margin-top:16px;">
+        Gracias por acompañarnos en este momento tan importante de nuestras vidas.
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-/* 🔗 Endpoint correcto */
 const apiUrl = "https://script.google.com/macros/s/AKfycbwsBt2VLDgYQt_o48jflUBQfHTwHKCY4t_3coQWHtZAAnUKwQoxDZIgIT6T-vv-Ozoubg/exec";
 
-const $ = (sel) => document.querySelector(sel);
-const resultEl = $("#result");
-const btnConsultar = $("#btnConsultar");
+const $ = (s)=>document.querySelector(s);
+const step1 = $("#step1");
+const step2 = $("#step2");
 const inputCodigo = $("#codigo");
+const btnContinuar = $("#btnContinuar");
+const msg1 = $("#msg1");
+const encabezado = $("#encabezado");
+const detallesEl = $("#detalles");
+const btnConfirmarTodos = $("#btnConfirmarTodos");
+const btnReiniciarTodos = $("#btnReiniciarTodos");
 
-function setLoading(btn, loading = true, textWhenLoading = "Cargando...") {
+const MENSAJE = `Estamos muy felices de poder compartir contigo este momento tan especial.
+Tu presencia hará aún más inolvidable nuestra celebración.`;
+
+let CURRENT = { codigo: "", nombre: "", pases: 0, estado: "", detalles: [] };
+
+function setLoading(btn, loading=true, text="Cargando..."){
   if (!btn) return;
-  if (loading) {
-    btn.dataset.prevText = btn.textContent;
-    btn.textContent = textWhenLoading;
-    btn.disabled = true;
-  } else {
-    btn.textContent = btn.dataset.prevText || "Consultar";
-    btn.disabled = false;
-  }
+  if (loading) { btn.dataset.prevText = btn.textContent; btn.textContent = text; btn.disabled = true; }
+  else { btn.textContent = btn.dataset.prevText || btn.textContent; btn.disabled = false; }
 }
 
-function showError(msg) {
-  resultEl.innerHTML = "";
-  const p = document.createElement("p");
-  p.className = "error";
-  p.textContent = msg;
-  resultEl.appendChild(p);
+function renderEncabezado() {
+  const { nombre, pases, estado } = CURRENT;
+  encabezado.innerHTML = `
+    <p><strong>Nombre:</strong> ${nombre || "(Sin nombre)"}</p>
+    <p class="muted" style="max-width:70%;margin:0 auto 16px;">${MENSAJE}</p>
+    <p><strong>No. de pases:</strong> ${pases}</p>
+    <p><strong>Estado general:</strong> ${estado || "Pendiente"}</p>
+  `;
 }
 
-function showInfo(inv) {
-  resultEl.innerHTML = "";
+function renderDetalles() {
+  detallesEl.innerHTML = "";
+  const head = document.createElement("div");
+  head.className = "row";
+  head.innerHTML = `<strong>Nombre</strong><strong>Estado</strong><strong>Acción</strong>`;
+  detallesEl.appendChild(head);
 
-  const nombre = document.createElement("p");
-  const pases = document.createElement("p");
-  const estado = document.createElement("p");
+  CURRENT.detalles.forEach(d => {
+    const row = document.createElement("div");
+    row.className = "row";
 
-  nombre.innerHTML = `<strong>Nombre:</strong> `;
-  pases.innerHTML = `<strong>No. de pases:</strong> `;
-  estado.innerHTML = `<strong>Estado:</strong> `;
+    // Nombre editable
+    const col1 = document.createElement("div");
+    const nameInput = document.createElement("input");
+    nameInput.className = "nameInput";
+    nameInput.value = d.nombre || ("Invitado " + d.idx);
+    col1.appendChild(nameInput);
 
-  const nombreSpan = document.createElement("span");
-  nombreSpan.textContent = inv.nombre || "(Sin nombre)";
-  const pasesSpan = document.createElement("span");
-  pasesSpan.textContent = inv.pases != null ? String(inv.pases) : "(N/D)";
-  const estadoSpan = document.createElement("span");
-  estadoSpan.textContent = inv.estado ? inv.estado : "Pendiente";
-
-  nombre.appendChild(nombreSpan);
-  pases.appendChild(pasesSpan);
-  estado.appendChild(estadoSpan);
-
-  resultEl.appendChild(nombre);
-  resultEl.appendChild(pases);
-  resultEl.appendChild(estado);
-
-  const btn = document.createElement("button");
-  btn.textContent = "Confirmar asistencia";
-  btn.addEventListener("click", () => confirmar(inv.codigo));
-  resultEl.appendChild(btn);
-
-  if ((inv.estado || "").toLowerCase() === "confirmado") {
-    const ya = document.createElement("p");
-    ya.className = "ok";
-    ya.textContent = "Tu asistencia ya está confirmada. ¡Gracias!";
-    resultEl.appendChild(ya);
-  }
-}
-
-async function consultarInvitado() {
-  const codigo = inputCodigo.value.trim();
-  if (!codigo) {
-    showError("Por favor ingresa tu código.");
-    inputCodigo.focus();
-    return;
-  }
-
-  setLoading(btnConsultar, true, "Consultando...");
-  try {
-    const res = await fetch(`${apiUrl}?codigo=${encodeURIComponent(codigo)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (data.error) {
-      showError(data.error);
-    } else {
-      showInfo({
-        codigo,
-        nombre: data.nombre,
-        pases: data.pases,
-        estado: data.estado
-      });
-    }
-  } catch (err) {
-    console.error(err);
-    showError("Error al consultar el invitado. Intenta de nuevo.");
-  } finally {
-    setLoading(btnConsultar, false);
-  }
-}
-
-/* 👇 Confirmación por GET (evita CORS del POST) */
-async function confirmar(codigo) {
-  if (!codigo) {
-    showError("Código inválido.");
-    return;
-  }
-
-  const confirmBtn = resultEl.querySelector("button");
-  setLoading(confirmBtn, true, "Confirmando...");
-
-  try {
-    const url = `${apiUrl}?accion=confirmar&codigo=${encodeURIComponent(codigo)}&estado=${encodeURIComponent("Confirmado")}`;
-    const res = await fetch(url); // GET
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const data = await res.json().catch(async () => {
-      const raw = await res.text();
-      throw new Error("Respuesta no-JSON: " + raw);
+    // Estado
+    const col2 = document.createElement("div");
+    const sel = document.createElement("select");
+    ["Pendiente","Confirmado","Rechazado"].forEach(s=>{
+      const opt = document.createElement("option");
+      opt.value = s; opt.textContent = s;
+      if ((d.estado || "Pendiente") === s) opt.selected = true;
+      sel.appendChild(opt);
     });
+    col2.appendChild(sel);
 
-    if (data.success) {
-      alert("¡Asistencia confirmada exitosamente!");
-      await consultarInvitado();
-    } else {
-      alert(data.message || "Error al confirmar asistencia.");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Error de conexión. Revisa consola (F12) si persiste.");
-  } finally {
-    setLoading(confirmBtn, false, "Confirmar asistencia");
-  }
+    // Acción
+    const col3 = document.createElement("div");
+    const btn = document.createElement("button");
+    btn.textContent = "Actualizar";
+    btn.addEventListener("click", async ()=>{
+      await actualizarDetalle(d.idx, sel.value, nameInput.value.trim());
+    });
+    col3.appendChild(btn);
+
+    row.appendChild(col1); row.appendChild(col2); row.appendChild(col3);
+    detallesEl.appendChild(row);
+  });
 }
 
-btnConsultar.addEventListener("click", consultarInvitado);
-inputCodigo.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") consultarInvitado();
+async function cargarInvitado(codigo) {
+  const url = `${apiUrl}?codigo=${encodeURIComponent(codigo)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+
+  CURRENT = {
+    codigo,
+    nombre: data.nombre,
+    pases: data.pases,
+    estado: data.estado || "Pendiente",
+    detalles: data.detalles || [] // [{idx,nombre,estado}]
+  };
+}
+
+async function actualizarDetalle(idx, estado, nombre) {
+  const url = `${apiUrl}?accion=actualizar_detalle&codigo=${encodeURIComponent(CURRENT.codigo)}&idx=${idx}&estado=${encodeURIComponent(estado)}&nombre=${encodeURIComponent(nombre || "")}`;
+  const res = await fetch(url);
+  if (!res.ok) { alert(`Error HTTP ${res.status}`); return; }
+  const data = await res.json();
+  if (!data.success) { alert(data.message || "No se pudo actualizar"); return; }
+  await cargarInvitado(CURRENT.codigo);
+  renderEncabezado();
+  renderDetalles();
+}
+
+btnContinuar.addEventListener("click", async ()=>{
+  const codigo = inputCodigo.value.trim();
+  if (!codigo) { msg1.textContent = "Por favor ingresa tu código."; inputCodigo.focus(); return; }
+
+  msg1.textContent = "";
+  setLoading(btnContinuar, true, "Buscando...");
+  try {
+    await cargarInvitado(codigo);
+    step1.style.display = "none";
+    step2.style.display = "block";
+    renderEncabezado();
+    renderDetalles();
+  } catch (err) {
+    console.error(err);
+    msg1.textContent = err.message || "No se pudo encontrar el invitado.";
+  } finally {
+    setLoading(btnContinuar, false);
+  }
+});
+
+inputCodigo.addEventListener("keydown", (e)=>{ if (e.key === "Enter") btnContinuar.click(); });
+
+btnConfirmarTodos.addEventListener("click", async ()=>{
+  const url = `${apiUrl}?accion=confirmar_todos&codigo=${encodeURIComponent(CURRENT.codigo)}`;
+  const res = await fetch(url);
+  if (!res.ok) { alert(`Error HTTP ${res.status}`); return; }
+  const data = await res.json();
+  if (!data.success) { alert(data.message || "No se pudo confirmar todos"); return; }
+  await cargarInvitado(CURRENT.codigo);
+  renderEncabezado();
+  renderDetalles();
+});
+
+btnReiniciarTodos.addEventListener("click", async ()=>{
+  const url = `${apiUrl}?accion=reiniciar_todos&codigo=${encodeURIComponent(CURRENT.codigo)}`;
+  const res = await fetch(url);
+  if (!res.ok) { alert(`Error HTTP ${res.status}`); return; }
+  const data = await res.json();
+  if (!data.success) { alert(data.message || "No se pudo reiniciar"); return; }
+  await cargarInvitado(CURRENT.codigo);
+  renderEncabezado();
+  renderDetalles();
 });
 </script>
 </body>
