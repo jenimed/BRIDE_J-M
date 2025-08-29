@@ -33,15 +33,33 @@
     .error { color: #b00020; font-weight: normal; }
     button { cursor: pointer; background-color: #333; color: white; border: none; }
     button:hover { background-color: #555; }
+
     .grid { width: 90%; max-width: 820px; margin: 0 auto; text-align: left; }
     .grid .row { display: grid; grid-template-columns: 2.2fr 1.1fr 1fr; gap: 10px; align-items: center; margin: 8px 0; }
-    .controls { display:flex; gap:8px; justify-content:center; margin-top: 8px; flex-wrap: wrap; }
+
+    /* Botones en una sola fila */
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 8px;
+      flex-wrap: nowrap;           /* <- no envolver */
+    }
+    /* Sobre-escribir el width global de los botones dentro de .controls */
+    .controls button {
+      width: auto;
+      display: inline-block;
+      padding: 12px 18px;
+    }
+
     @media (max-width: 900px) {
       .container { flex-direction: column; }
       .imagen { min-height: 40vh; }
       .contenido { padding: 32px; }
       input, button, select { width: 100%; }
       .grid .row { grid-template-columns: 1fr 1fr; }
+      /* Si prefieres permitir wrap en pantallas muy chicas, descomenta la línea siguiente */
+      /* .controls { flex-wrap: wrap; } */
     }
   </style>
 </head>
@@ -50,7 +68,7 @@
   <div class="imagen" aria-hidden="true"></div>
 
   <div class="contenido">
-    <!-- TÍTULO dinámico -->
+    <!-- TÍTULO dinámico (se reemplaza por el nombre del invitado en el paso 2) -->
     <h1 id="titulo">CONFIRMAR ASISTENCIA</h1>
 
     <!-- Paso 1 -->
@@ -70,10 +88,6 @@
         <button id="btnGuardar">Aceptar</button>
         <button id="btnReiniciarTodos">Reiniciar a pendiente</button>
         <button id="btnSalir">Salir</button>
-      </div>
-
-      <div class="muted" style="margin-top:16px;">
-        Gracias por acompañarnos en este momento tan importante de nuestras vidas.
       </div>
     </div>
   </div>
