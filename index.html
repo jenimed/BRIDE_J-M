@@ -13,12 +13,13 @@
       display: flex;
       min-height: 100vh;
     }
-    .imagen {
-      flex: 1;
-      background-image: url('img/jm-54-1.jpg'); /* usa aquí el nuevo nombre */
-      background-size: cover;
-      background-position: center;
-    }
+.imagen {
+  flex: 1;
+  background-image: url('j%26M-54%20(1).jpg'); /* Versión codificada de 'j&M-54 (1).jpg' */
+  background-size: cover;
+  background-position: center;
+}
+
     .contenido {
       flex: 1;
       padding: 50px;
@@ -72,7 +73,7 @@
     }
 
     try {
-      const response = await fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_ID/search?Codigo=' + codigo);
+      const response = await fetch('https://sheetdb.io/api/v1/1fDQOTiesTcW_O7XkLB6uFO88xyv8HscdR7Glpl6Ztfc/search?Codigo=' + codigo);
       const data = await response.json();
 
       if (data.length > 0) {
