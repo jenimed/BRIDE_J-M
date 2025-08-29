@@ -10,7 +10,7 @@
     .container { display: flex; min-height: 100vh; }
     .imagen {
       flex: 1;
-      background-image: url('j%26M-54%20(1).jpg'); /* Ajusta el nombre si cambia */
+      background-image: url('j%26M-54%20(1).jpg');
       background-size: cover;
       background-position: center;
     }
@@ -29,7 +29,6 @@
     .ok { color: #0a7a30; font-weight: normal; }
     button { cursor: pointer; background-color: #333; color: white; border: none; }
     button:hover { background-color: #555; }
-    .small { font-size: 13px; color: #666; margin-top: 8px; }
     @media (max-width: 900px) {
       .container { flex-direction: column; }
       .imagen { min-height: 40vh; }
@@ -51,13 +50,12 @@
     <button id="btnConsultar">Consultar</button>
 
     <div id="result" aria-live="polite"></div>
-    <p class="small">Si tienes problemas con tu código, contáctanos.</p>
     <p>¡Gracias por acompañarnos en este momento tan importante de nuestras vidas!</p>
   </div>
 </div>
 
 <script>
-/* 🔗 Usa tu endpoint nuevo */
+/* 🔗 Endpoint correcto */
 const apiUrl = "https://script.google.com/macros/s/AKfycbwsBt2VLDgYQt_o48jflUBQfHTwHKCY4t_3coQWHtZAAnUKwQoxDZIgIT6T-vv-Ozoubg/exec";
 
 const $ = (sel) => document.querySelector(sel);
@@ -156,6 +154,7 @@ async function consultarInvitado() {
   }
 }
 
+/* 👇 Confirmación por GET (evita CORS del POST) */
 async function confirmar(codigo) {
   if (!codigo) {
     showError("Código inválido.");
@@ -166,16 +165,14 @@ async function confirmar(codigo) {
   setLoading(confirmBtn, true, "Confirmando...");
 
   try {
-    const body = new URLSearchParams({ accion: "confirmar", codigo, estado: "Confirmado" });
-
-    const res = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body
-    });
-
+    const url = `${apiUrl}?accion=confirmar&codigo=${encodeURIComponent(codigo)}&estado=${encodeURIComponent("Confirmado")}`;
+    const res = await fetch(url); // GET
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+
+    const data = await res.json().catch(async () => {
+      const raw = await res.text();
+      throw new Error("Respuesta no-JSON: " + raw);
+    });
 
     if (data.success) {
       alert("¡Asistencia confirmada exitosamente!");
@@ -185,7 +182,7 @@ async function confirmar(codigo) {
     }
   } catch (err) {
     console.error(err);
-    alert("Error de conexión. Intenta nuevamente.");
+    alert("Error de conexión. Revisa consola (F12) si persiste.");
   } finally {
     setLoading(confirmBtn, false, "Confirmar asistencia");
   }
@@ -198,5 +195,4 @@ inputCodigo.addEventListener("keydown", (e) => {
 </script>
 </body>
 </html>
-
 
