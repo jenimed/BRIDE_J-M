@@ -10,7 +10,7 @@
     .container { display: flex; min-height: 100vh; }
     .imagen {
       flex: 1;
-      background-image: url('j%26M-54%20(1).jpg');
+      background-image: url('j%26M-54%20(1).jpg'); /* Ajusta el nombre si cambia */
       background-size: cover;
       background-position: center;
     }
@@ -30,6 +30,12 @@
     button { cursor: pointer; background-color: #333; color: white; border: none; }
     button:hover { background-color: #555; }
     .small { font-size: 13px; color: #666; margin-top: 8px; }
+    @media (max-width: 900px) {
+      .container { flex-direction: column; }
+      .imagen { min-height: 40vh; }
+      .contenido { padding: 32px; }
+      input, button { width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -51,7 +57,8 @@
 </div>
 
 <script>
-const apiUrl = "https://script.google.com/macros/s/AKfycbyYUDSfseFsQYqh1q_dsaDF_uRDF4XmtniJEHIW7GkL1Ivdoujv0Bc3avWWlea-s_Jw0g/exec";
+/* 🔗 Usa tu endpoint nuevo */
+const apiUrl = "https://script.google.com/macros/s/AKfycbwsBt2VLDgYQt_o48jflUBQfHTwHKCY4t_3coQWHtZAAnUKwQoxDZIgIT6T-vv-Ozoubg/exec";
 
 const $ = (sel) => document.querySelector(sel);
 const resultEl = $("#result");
@@ -104,13 +111,11 @@ function showInfo(inv) {
   resultEl.appendChild(pases);
   resultEl.appendChild(estado);
 
-  // Botón confirmar
   const btn = document.createElement("button");
   btn.textContent = "Confirmar asistencia";
   btn.addEventListener("click", () => confirmar(inv.codigo));
   resultEl.appendChild(btn);
 
-  // Mensaje suave si ya está confirmado
   if ((inv.estado || "").toLowerCase() === "confirmado") {
     const ya = document.createElement("p");
     ya.className = "ok";
@@ -129,18 +134,13 @@ async function consultarInvitado() {
 
   setLoading(btnConsultar, true, "Consultando...");
   try {
-    const res = await fetch(`${apiUrl}?codigo=${encodeURIComponent(codigo)}`, {
-      method: "GET",
-      // No cabeceras personalizadas -> evita preflight
-    });
-
+    const res = await fetch(`${apiUrl}?codigo=${encodeURIComponent(codigo)}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
     if (data.error) {
       showError(data.error);
     } else {
-      // Normalizamos para que confirmar lo use sin leer otra vez el input
       showInfo({
         codigo,
         nombre: data.nombre,
@@ -162,19 +162,15 @@ async function confirmar(codigo) {
     return;
   }
 
-  // Creamos un botón “temporal” para mostrar loading en confirmación
-  let confirmBtn = resultEl.querySelector("button");
+  const confirmBtn = resultEl.querySelector("button");
   setLoading(confirmBtn, true, "Confirmando...");
 
   try {
-    // ⚠️ Importante: usar x-www-form-urlencoded para evitar preflight
     const body = new URLSearchParams({ accion: "confirmar", codigo, estado: "Confirmado" });
 
     const res = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
       body
     });
 
@@ -183,7 +179,6 @@ async function confirmar(codigo) {
 
     if (data.success) {
       alert("¡Asistencia confirmada exitosamente!");
-      // refrescamos datos del invitado
       await consultarInvitado();
     } else {
       alert(data.message || "Error al confirmar asistencia.");
@@ -203,4 +198,5 @@ inputCodigo.addEventListener("keydown", (e) => {
 </script>
 </body>
 </html>
+
 
