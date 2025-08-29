@@ -2,67 +2,92 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSVP - Confirmación de asistencia</title>
+  <title>Confirmar Asistencia</title>
   <style>
-    body { font-family: Arial,sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px; background:#fefefe; }
-    .container { max-width:600px; width:100%; margin-top:2em; text-align:center; }
-    h1 { color: #d63384; margin-bottom:10px; }
-    input[type="text"] { width:80%; padding:12px; border:2px solid #d63384; border-radius:8px; font-size:16px; margin-bottom:15px; }
-    button { padding:12px 30px; background:#d63384; color:white; border:none; border-radius:8px; cursor:pointer; }
-    button:hover { background:#9f2b6b; }
-    #message { margin-top:20px; font-size:18px; color:#333; }
-    .iframe-container { position: relative; width: 100%; height: 0; padding-top: 249.1947%; padding-bottom:0; box-shadow: 0 2px 8px rgba(63,69,81,0.16); margin-top:1.6em; margin-bottom:0.9em; overflow:hidden; border-radius:8px; }
-    .iframe-container iframe { position:absolute; width:100%; height:100%; top:0; left:0; border:none; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .imagen {
+      flex: 1;
+      background-image: url('img/jm-54-1.jpg'); /* usa aquí el nuevo nombre */
+      background-size: cover;
+      background-position: center;
+    }
+    .contenido {
+      flex: 1;
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+    input, button {
+      padding: 12px;
+      font-size: 18px;
+      margin: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      width: 60%;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Confirmación de Asistencia</h1>
-  <p>Ingresa tu código único para ver tus pases:</p>
-  <input type="text" id="codigo" placeholder="Código de invitado">
-  <br>
-  <button onclick="verificarCodigo()">Verificar</button>
-  <div id="message"></div>
+  <div class="imagen"></div>
 
-  <div class="iframe-container">
-    <iframe loading="lazy" 
-      src="https://www.canva.com/design/DAGxJVd0lhg/GqqwsxmINOi_K5mCu4b4PA/watch?embed" 
-      allowfullscreen allow="fullscreen"></iframe>
+  <div class="contenido">
+    <h1>CONFIRMAR ASISTENCIA</h1>
+    <p>Estamos muy emocionados de celebrar este día tan especial con nuestros familiares y amigos más cercanos. Por favor, confirma tu asistencia</p>
+    <p><strong>Fecha límite para confirmar:</strong> 10/10/2025</p>
+
+    <label for="codigo">Código de Invitado</label><br>
+    <input type="text" id="codigo" placeholder="Ingresa tu código aquí"><br>
+    <button onclick="consultarCodigo()">Consultar</button>
+
+    <div id="result"></div>
+
+    <p>¡Gracias por acompañarnos en este momento tan importante de nuestras vidas!</p>
   </div>
-  <a href="https://www.canva.com/design/DAGxJVd0lhg/GqqwsxmINOi_K5mCu4b4PA/watch?utm_content=DAGxJVd0lhg&utm_campaign=designshare&utm_medium=embeds&utm_source=link" target="_blank" rel="noopener">Marco & Jennifer</a> de JENNIFER JAMILETH MEDINA DE LEÓN
 </div>
 
 <script>
-let invitadosData = {};
+  async function consultarCodigo() {
+    const codigo = document.getElementById("codigo").value.trim();
+    const resultDiv = document.getElementById("result");
 
-// Traer datos desde tu Google Apps Script
-fetch("https://script.google.com/macros/s/AKfycbyYUDSfseFsQYqh1q_dsaDF_uRDF4XmtniJEHIW7GkL1Ivdoujv0Bc3avWWlea-s_Jw0g/exec")
-  .then(response => response.json())
-  .then(data => {
-    // data debe ser un array de objetos {Código, Nombre, NoPersonas, Estado}
-    data.forEach(item => {
-      invitadosData[item.Código.toUpperCase()] = {
-        nombre: item.Nombre,
-        personas: item["No. Personas"]
-      };
-    });
-  })
-  .catch(err => console.error("Error cargando datos:", err));
+    if (!codigo) {
+      resultDiv.textContent = "Por favor ingresa un código.";
+      return;
+    }
 
-function verificarCodigo() {
-  const codigo = document.getElementById("codigo").value.trim().toUpperCase();
-  const message = document.getElementById("message");
+    try {
+      const response = await fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_ID/search?Codigo=' + codigo);
+      const data = await response.json();
 
-  if(codigo in invitadosData){
-    const {nombre, personas} = invitadosData[codigo];
-    message.innerHTML = `¡Hola <strong>${nombre}</strong>! Tienes <strong>${personas}</strong> lugar(es) reservados para ti.`;
-  } else {
-    message.innerHTML = `<span style="color:red">Código inválido. Verifica tu código.</span>`;
+      if (data.length > 0) {
+        resultDiv.innerHTML = `Cantidad de lugares reservados para ti: <strong>${data[0].Lugares}</strong>`;
+      } else {
+        resultDiv.textContent = "Código no encontrado. Verifica e intenta de nuevo.";
+      }
+
+    } catch (error) {
+      console.error(error);
+      resultDiv.textContent = "Error al consultar. Intenta más tarde.";
+    }
   }
-}
 </script>
 
 </body>
 </html>
+
