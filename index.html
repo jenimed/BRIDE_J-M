@@ -1,92 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Confirmar Asistencia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      display: flex;
-      min-height: 100vh;
-    }
-
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .container { display: flex; min-height: 100vh; }
     .imagen {
       flex: 1;
-      background-image: url('j%26M-54%20(1).jpg'); /* imagen en root con espacios y & codificados */
+      background-image: url('j%26M-54%20(1).jpg');
       background-size: cover;
       background-position: center;
     }
-
     .contenido {
-      flex: 1;
-      padding: 60px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-      background-color: #f7f7f7;
+      flex: 1; padding: 60px; display: flex; flex-direction: column;
+      justify-content: center; text-align: center; background-color: #f7f7f7;
     }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    p {
-      margin: 5px 0 20px;
-    }
-
+    h1 { margin-bottom: 10px; }
+    p { margin: 5px 0 20px; }
     input, button {
-      padding: 12px;
-      font-size: 16px;
-      margin: 10px auto;
-      border-radius: 20px;
-      border: 1px solid #ccc;
-      width: 70%;
-      max-width: 400px;
-      display: block;
+      padding: 12px; font-size: 16px; margin: 10px auto; border-radius: 20px;
+      border: 1px solid #ccc; width: 70%; max-width: 420px; display: block;
     }
-
-    #result {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-
-    button {
-      cursor: pointer;
-      background-color: #333;
-      color: white;
-      border: none;
-    }
-
-    button:hover {
-      background-color: #555;
-    }
+    #result { margin-top: 20px; font-weight: bold; }
+    .error { color: #b00020; font-weight: normal; }
+    .ok { color: #0a7a30; font-weight: normal; }
+    button { cursor: pointer; background-color: #333; color: white; border: none; }
+    button:hover { background-color: #555; }
+    .small { font-size: 13px; color: #666; margin-top: 8px; }
   </style>
 </head>
 <body>
-
 <div class="container">
-  <div class="imagen"></div>
+  <div class="imagen" aria-hidden="true"></div>
 
   <div class="contenido">
     <h1>CONFIRMAR ASISTENCIA</h1>
-    <p>Estamos muy emocionados de celebrar este día tan especial con nuestros familiares y amigos más cercanos. Por favor, confirma tu asistencia</p>
+    <p>Estamos muy emocionados de celebrar este día tan especial con nuestros familiares y amigos más cercanos. Por favor, confirma tu asistencia.</p>
     <p><strong>Fecha límite para confirmar:</strong> 10/10/2025</p>
 
-    <input type="text" id="codigo" placeholder="Ingresa tu código de invitado">
-    <button onclick="consultarInvitado()">Consultar</button>
+    <input type="text" id="codigo" placeholder="Ingresa tu código de invitado" autocomplete="one-time-code" />
+    <button id="btnConsultar">Consultar</button>
 
-    <div id="result"></div>
-
+    <div id="result" aria-live="polite"></div>
+    <p class="small">Si tienes problemas con tu código, contáctanos.</p>
     <p>¡Gracias por acompañarnos en este momento tan importante de nuestras vidas!</p>
   </div>
 </div>
@@ -94,57 +53,154 @@
 <script>
 const apiUrl = "https://script.google.com/macros/s/AKfycbyYUDSfseFsQYqh1q_dsaDF_uRDF4XmtniJEHIW7GkL1Ivdoujv0Bc3avWWlea-s_Jw0g/exec";
 
-function consultarInvitado() {
-  const codigo = document.getElementById("codigo").value.trim();
+const $ = (sel) => document.querySelector(sel);
+const resultEl = $("#result");
+const btnConsultar = $("#btnConsultar");
+const inputCodigo = $("#codigo");
+
+function setLoading(btn, loading = true, textWhenLoading = "Cargando...") {
+  if (!btn) return;
+  if (loading) {
+    btn.dataset.prevText = btn.textContent;
+    btn.textContent = textWhenLoading;
+    btn.disabled = true;
+  } else {
+    btn.textContent = btn.dataset.prevText || "Consultar";
+    btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  resultEl.innerHTML = "";
+  const p = document.createElement("p");
+  p.className = "error";
+  p.textContent = msg;
+  resultEl.appendChild(p);
+}
+
+function showInfo(inv) {
+  resultEl.innerHTML = "";
+
+  const nombre = document.createElement("p");
+  const pases = document.createElement("p");
+  const estado = document.createElement("p");
+
+  nombre.innerHTML = `<strong>Nombre:</strong> `;
+  pases.innerHTML = `<strong>No. de pases:</strong> `;
+  estado.innerHTML = `<strong>Estado:</strong> `;
+
+  const nombreSpan = document.createElement("span");
+  nombreSpan.textContent = inv.nombre || "(Sin nombre)";
+  const pasesSpan = document.createElement("span");
+  pasesSpan.textContent = inv.pases != null ? String(inv.pases) : "(N/D)";
+  const estadoSpan = document.createElement("span");
+  estadoSpan.textContent = inv.estado ? inv.estado : "Pendiente";
+
+  nombre.appendChild(nombreSpan);
+  pases.appendChild(pasesSpan);
+  estado.appendChild(estadoSpan);
+
+  resultEl.appendChild(nombre);
+  resultEl.appendChild(pases);
+  resultEl.appendChild(estado);
+
+  // Botón confirmar
+  const btn = document.createElement("button");
+  btn.textContent = "Confirmar asistencia";
+  btn.addEventListener("click", () => confirmar(inv.codigo));
+  resultEl.appendChild(btn);
+
+  // Mensaje suave si ya está confirmado
+  if ((inv.estado || "").toLowerCase() === "confirmado") {
+    const ya = document.createElement("p");
+    ya.className = "ok";
+    ya.textContent = "Tu asistencia ya está confirmada. ¡Gracias!";
+    resultEl.appendChild(ya);
+  }
+}
+
+async function consultarInvitado() {
+  const codigo = inputCodigo.value.trim();
   if (!codigo) {
-    alert("Por favor ingrese su código.");
+    showError("Por favor ingresa tu código.");
+    inputCodigo.focus();
     return;
   }
 
-  fetch(`${apiUrl}?codigo=${codigo}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        document.getElementById("result").innerHTML = `<p style="color:red">${data.error}</p>`;
-      } else {
-        document.getElementById("result").innerHTML = `
-          <p><strong>Nombre:</strong> ${data.nombre}</p>
-          <p><strong>No. de pases:</strong> ${data.pases}</p>
-          <p><strong>Estado:</strong> ${data.estado || "Pendiente"}</p>
-          <button onclick="confirmar('${codigo}')">Confirmar asistencia</button>
-        `;
-      }
-    })
-    .catch(err => {
-      document.getElementById("result").innerHTML = `<p style="color:red">Error al consultar el invitado.</p>`;
-      console.error(err);
+  setLoading(btnConsultar, true, "Consultando...");
+  try {
+    const res = await fetch(`${apiUrl}?codigo=${encodeURIComponent(codigo)}`, {
+      method: "GET",
+      // No cabeceras personalizadas -> evita preflight
     });
-}
 
-function confirmar(codigo) {
-  const estado = "Confirmado";
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
 
-  fetch(apiUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ codigo, estado })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      alert("Asistencia confirmada exitosamente!");
-      consultarInvitado(); // refresca la info
+    if (data.error) {
+      showError(data.error);
     } else {
-      alert("Error al confirmar asistencia.");
+      // Normalizamos para que confirmar lo use sin leer otra vez el input
+      showInfo({
+        codigo,
+        nombre: data.nombre,
+        pases: data.pases,
+        estado: data.estado
+      });
     }
-  })
-  .catch(err => {
-    alert("Error de conexión.");
+  } catch (err) {
     console.error(err);
-  });
+    showError("Error al consultar el invitado. Intenta de nuevo.");
+  } finally {
+    setLoading(btnConsultar, false);
+  }
 }
-</script>
 
+async function confirmar(codigo) {
+  if (!codigo) {
+    showError("Código inválido.");
+    return;
+  }
+
+  // Creamos un botón “temporal” para mostrar loading en confirmación
+  let confirmBtn = resultEl.querySelector("button");
+  setLoading(confirmBtn, true, "Confirmando...");
+
+  try {
+    // ⚠️ Importante: usar x-www-form-urlencoded para evitar preflight
+    const body = new URLSearchParams({ accion: "confirmar", codigo, estado: "Confirmado" });
+
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (data.success) {
+      alert("¡Asistencia confirmada exitosamente!");
+      // refrescamos datos del invitado
+      await consultarInvitado();
+    } else {
+      alert(data.message || "Error al confirmar asistencia.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error de conexión. Intenta nuevamente.");
+  } finally {
+    setLoading(confirmBtn, false, "Confirmar asistencia");
+  }
+}
+
+btnConsultar.addEventListener("click", consultarInvitado);
+inputCodigo.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") consultarInvitado();
+});
+</script>
 </body>
 </html>
 
