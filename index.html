@@ -25,9 +25,9 @@
     }
     h1 { margin-bottom: 10px; }
     p { margin: 5px 0 20px; }
-    input, button, select {
+    input, button, select, textarea {
       padding: 12px; font-size: 16px; margin: 10px auto; border-radius: 20px;
-      border: 1px solid #ccc; width: 70%; max-width: 520px; display: block;
+      border: 1px solid #ccc; width: 70%; max-width: 820px; display: block;
     }
     .muted { color:#666; font-weight: normal; }
     .error { color: #b00020; font-weight: normal; }
@@ -36,30 +36,19 @@
 
     .grid { width: 90%; max-width: 820px; margin: 0 auto; text-align: left; }
     .grid .row { display: grid; grid-template-columns: 2.2fr 1.1fr 1fr; gap: 10px; align-items: center; margin: 8px 0; }
-
-    /* Botones en una sola fila */
+    .accionStack { display:flex; flex-direction: column; gap: 8px; }
     .controls {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 8px;
-      flex-wrap: nowrap;           /* <- no envolver */
+      display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: nowrap;
     }
-    /* Sobre-escribir el width global de los botones dentro de .controls */
-    .controls button {
-      width: auto;
-      display: inline-block;
-      padding: 12px 18px;
-    }
+    .controls button { width: auto; display: inline-block; padding: 12px 18px; }
 
     @media (max-width: 900px) {
       .container { flex-direction: column; }
       .imagen { min-height: 40vh; }
       .contenido { padding: 32px; }
-      input, button, select { width: 100%; }
+      input, button, select, textarea { width: 100%; }
       .grid .row { grid-template-columns: 1fr 1fr; }
-      /* Si prefieres permitir wrap en pantallas muy chicas, descomenta la línea siguiente */
-      /* .controls { flex-wrap: wrap; } */
+      /* .controls { flex-wrap: wrap; }  // descomenta si prefieres envolver en móvil */
     }
   </style>
 </head>
@@ -82,7 +71,11 @@
     <!-- Paso 2 -->
     <div id="step2" style="display:none;">
       <div id="encabezado"></div>
+
       <div id="detalles" class="grid"></div>
+
+      <!-- Comentario por familia/código -->
+      <textarea id="comentario" rows="3" placeholder="Comentario (opcional): alergias, restricciones, horario de llegada, etc."></textarea>
 
       <div class="controls">
         <button id="btnGuardar">Aceptar</button>
@@ -94,7 +87,7 @@
 </div>
 
 <script>
-/* 🔗 Tu endpoint actual (cámbialo si redeployas) */
+/* 🔗 Endpoint actual */
 const apiUrl = "https://script.google.com/macros/s/AKfycbxYxCPNJnt8Fjvo1_f1RapU1KTH8D-tPs6OHkuTOkV-EV5tnFX3GeRrR9I3QpUXcqJ4vw/exec";
 
 const $ = (s)=>document.querySelector(s);
@@ -106,6 +99,7 @@ const msg1 = $("#msg1");
 const titleEl = document.getElementById("titulo");
 const encabezado = $("#encabezado");
 const detallesEl = $("#detalles");
+const txtComentario = $("#comentario");
 const btnGuardar = $("#btnGuardar");
 const btnReiniciarTodos = $("#btnReiniciarTodos");
 const btnSalir = $("#btnSalir");
@@ -113,7 +107,7 @@ const btnSalir = $("#btnSalir");
 const MENSAJE = `Estamos muy felices de poder compartir contigo este momento tan especial.
 Tu presencia hará aún más inolvidable nuestra celebración.`;
 
-let CURRENT = { codigo: "", nombre: "", pases: 0, estado: "", detalles: [] };
+let CURRENT = { codigo: "", nombre: "", pases: 0, estado: "", comentario: "", detalles: [] };
 
 function setLoading(btn, loading=true, text="Cargando..."){
   if (!btn) return;
@@ -122,13 +116,14 @@ function setLoading(btn, loading=true, text="Cargando..."){
 }
 
 function resetFlow(){
-  CURRENT = { codigo: "", nombre: "", pases: 0, estado: "", detalles: [] };
+  CURRENT = { codigo: "", nombre: "", pases: 0, estado: "", comentario: "", detalles: [] };
   encabezado.innerHTML = "";
   detallesEl.innerHTML = "";
   step2.style.display = "none";
   step1.style.display = "block";
   msg1.textContent = "";
   inputCodigo.value = "";
+  txtComentario.value = "";
   if (titleEl) titleEl.textContent = "CONFIRMAR ASISTENCIA";
   inputCodigo.focus();
 }
@@ -172,25 +167,47 @@ function renderDetalles() {
     const col1 = document.createElement("div");
     col1.textContent = d.nombre || ("Invitado " + d.idx);
 
-    // Estado actual
+    // Estado actual (texto)
     const col2 = document.createElement("div");
     col2.textContent = d.estado || "Pendiente";
 
-    // Acción (select)
+    // Acción (dos selects: decisión y tipo de asistencia)
     const col3 = document.createElement("div");
-    const sel = document.createElement("select");
+    const stack = document.createElement("div");
+    stack.className = "accionStack";
+
+    // Select de decisión (estado)
+    const selEstado = document.createElement("select");
     ["Confirmar","No asistiré","Pendiente"].forEach(lbl=>{
       const opt = document.createElement("option");
       opt.value = lbl; opt.textContent = lbl;
       if (lbl === labelFromValue(d.estado)) opt.selected = true;
-      sel.appendChild(opt);
+      selEstado.appendChild(opt);
     });
-    sel.dataset.idx = d.idx; // ordinal para guardar
-    col3.appendChild(sel);
+    selEstado.dataset.idx = d.idx;
+    selEstado.dataset.kind = "estado";
+    stack.appendChild(selEstado);
+
+    // Select de tipo (Ceremonia/Cena/Ambas)
+    const selTipo = document.createElement("select");
+    ["Ceremonia","Cena","Ambas"].forEach(lbl=>{
+      const opt = document.createElement("option");
+      opt.value = lbl; opt.textContent = lbl;
+      if ((d.tipo || "Ambas") === lbl) opt.selected = true;
+      selTipo.appendChild(opt);
+    });
+    selTipo.dataset.idx = d.idx;
+    selTipo.dataset.kind = "tipo";
+    stack.appendChild(selTipo);
+
+    col3.appendChild(stack);
 
     row.appendChild(col1); row.appendChild(col2); row.appendChild(col3);
     detallesEl.appendChild(row);
   });
+
+  // Comentario
+  txtComentario.value = CURRENT.comentario || "";
 }
 
 async function cargarInvitado(codigo) {
@@ -205,7 +222,8 @@ async function cargarInvitado(codigo) {
     nombre: data.nombre,
     pases: data.pases,
     estado: data.estado || "Pendiente",
-    detalles: data.detalles || []  // [{idx,nombre,estado}]
+    comentario: data.comentario || "",
+    detalles: data.detalles || []  // [{idx,nombre,estado,tipo}]
   };
 
   // Título = nombre principal en grande
@@ -238,19 +256,47 @@ btnGuardar.addEventListener("click", async ()=>{
   const selects = detallesEl.querySelectorAll("select");
   setLoading(btnGuardar, true, "Guardando...");
   try {
-    // Guardamos solo si cambió algo respecto al estado actual
-    const currentByIdx = new Map(CURRENT.detalles.map(d => [String(d.idx), (d.estado || "Pendiente")]));
-    for (const sel of selects) {
-      const idx = Number(sel.dataset.idx);
-      const nuevo = valueFromLabel(sel.value);
-      const actual = currentByIdx.get(String(idx)) || "Pendiente";
-      if (nuevo === actual) continue;
+    // Mapas actuales
+    const estadoByIdx = new Map(CURRENT.detalles.map(d => [String(d.idx), (d.estado || "Pendiente")]));
+    const tipoByIdx   = new Map(CURRENT.detalles.map(d => [String(d.idx), (d.tipo   || "Ambas")]));
 
-      const url = `${apiUrl}?accion=actualizar_detalle&codigo=${encodeURIComponent(CURRENT.codigo)}&idx=${idx}&estado=${encodeURIComponent(nuevo)}`;
+    // Agrupar cambios por idx
+    const cambios = {}; // { idx: {estado?, tipo?} }
+    for (const sel of selects) {
+      const idx = String(sel.dataset.idx);
+      const kind = sel.dataset.kind;
+      if (!cambios[idx]) cambios[idx] = {};
+      if (kind === "estado") {
+        const nuevoEstado = valueFromLabel(sel.value);
+        const actualEstado = estadoByIdx.get(idx) || "Pendiente";
+        if (nuevoEstado !== actualEstado) cambios[idx].estado = nuevoEstado;
+      } else if (kind === "tipo") {
+        const nuevoTipo = sel.value || "Ambas";
+        const actualTipo = tipoByIdx.get(idx) || "Ambas";
+        if (nuevoTipo !== actualTipo) cambios[idx].tipo = nuevoTipo;
+      }
+    }
+
+    // Guardar por idx (una llamada por persona que cambió)
+    const idxs = Object.keys(cambios);
+    for (const idx of idxs) {
+      const ch = cambios[idx];
+      if (!ch.estado && !ch.tipo) continue; // nada cambió
+      const url = `${apiUrl}?accion=actualizar_detalle&codigo=${encodeURIComponent(CURRENT.codigo)}&idx=${encodeURIComponent(idx)}${ch.estado ? `&estado=${encodeURIComponent(ch.estado)}` : ''}${ch.tipo ? `&tipo=${encodeURIComponent(ch.tipo)}` : ''}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "No se pudo actualizar");
+    }
+
+    // Guardar comentario si cambió
+    const nuevoComentario = (txtComentario.value || "").trim();
+    if ((CURRENT.comentario || "") !== nuevoComentario) {
+      const urlC = `${apiUrl}?accion=actualizar_comentario&codigo=${encodeURIComponent(CURRENT.codigo)}&comentario=${encodeURIComponent(nuevoComentario)}`;
+      const resC = await fetch(urlC);
+      if (!resC.ok) throw new Error(`Error HTTP ${resC.status}`);
+      const dataC = await resC.json();
+      if (!dataC.success) throw new Error(dataC.message || "No se pudo guardar el comentario");
     }
 
     await cargarInvitado(CURRENT.codigo);
