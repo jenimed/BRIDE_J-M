@@ -5,50 +5,78 @@
   <title>Confirmar Asistencia</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-  :root { --maxw: 980px; }
-  * { box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-  .container { display: flex; min-height: 100vh; }
-  .imagen { flex: 1; background-image: url('j%26M-54%20(1).jpg'); background-size: cover; background-position: center; }
-  .contenido { flex: 1; padding: 48px; display: flex; flex-direction: column; justify-content: center; text-align: center; background-color: #f7f7f7; }
-  h1 { margin-bottom: 10px; }
-  p { margin: 5px 0 16px; }
-  input, button, select {
-    padding: 12px; font-size: 16px; margin: 10px auto; border-radius: 20px;
-    border: 1px solid #ccc; width: 70%; max-width: var(--maxw); display: block;
-  }
-  .muted { color:#666; font-weight: normal; }
-  .error { color: #b00020; font-weight: normal; }
-  button { cursor: pointer; background-color: #333; color: white; border: none; }
-  button:hover { background-color: #555; }
-  .grid { width: 90%; max-width: var(--maxw); margin: 0 auto; text-align: left; }
-  .grid .row { display: grid; grid-template-columns: 2.2fr 1fr 1.6fr 1.1fr; gap: 10px; align-items: center; margin: 8px 0; }
-  .controls { display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
-  .controls button { width: auto; display: inline-block; padding: 12px 18px; }
+    :root { --maxw: 980px; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .container { display: flex; min-height: 100vh; }
+    .imagen { flex: 1; background-image: url('j%26M-54%20(1).jpg'); background-size: cover; background-position: center; }
+    .contenido { flex: 1; padding: 48px; display: flex; flex-direction: column; justify-content: center; text-align: center; background-color: #f7f7f7; }
+    h1 { margin-bottom: 10px; }
+    p { margin: 5px 0 16px; }
+    input, button, select {
+      padding: 12px; font-size: 16px; margin: 10px auto; border-radius: 20px;
+      border: 1px solid #ccc; width: 70%; max-width: var(--maxw); display: block;
+    }
+    .muted { color:#666; font-weight: normal; }
+    .error { color: #b00020; font-weight: normal; }
+    button { cursor: pointer; background-color: #333; color: white; border: none; }
+    button:hover { background-color: #555; }
 
-  /* 👇 Comentario debajo de botones, centrado */
-  #comentarioAbajo {
-    width: 90%;
-    max-width: var(--maxw);
-    margin: 12px auto 0;
-    text-align: center; /* antes: left */
-  }
+    .grid { width: 90%; max-width: var(--maxw); margin: 0 auto; text-align: left; }
+    .grid .row {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr 1.6fr 1.1fr; /* nombre | estado | asistencia | acción */
+      gap: 10px; align-items: center; margin: 8px 0;
+    }
 
-  @media (max-width: 900px) {
-    .container { flex-direction: column; }
-    .imagen { min-height: 36vh; }
-    .contenido { padding: 28px; }
-    input, button, select { width: 100%; }
-    .grid { max-width: 100%; }
-    .grid .row { grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 480px) {
-    .contenido { padding: 22px; }
-    body { font-size: 15px; }
-    .grid .row { grid-template-columns: 1fr; }
-    .grid .row > * { margin-bottom: 2px; }
-  }
-</style>
+    .controls { display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+    .controls button { width: auto; display: inline-block; padding: 12px 18px; }
+
+    /* Comentario: centrado, negrita + cursiva, con más separación de los botones */
+    #comentarioAbajo {
+      width: 90%;
+      max-width: var(--maxw);
+      margin: 28px auto 0;
+      text-align: center;
+      font-weight: 700;
+      font-style: italic;
+    }
+
+    /* — Centrado en móvil — */
+    @media (max-width: 900px) {
+      .container { flex-direction: column; }
+      .imagen { min-height: 36vh; }
+      .contenido { padding: 28px; }
+      input, button, select { width: 100%; }
+      .grid { max-width: 100%; }
+      .grid .row { grid-template-columns: 1fr; } /* cada celda en su renglón */
+      .grid, .grid .row, .grid .row > * { text-align: center !important; }
+      .grid .row select { margin-left: auto; margin-right: auto; }
+    }
+
+    @media (max-width: 480px) {
+      .contenido { padding: 22px; }
+      body { font-size: 15px; }
+    }
+    
+      /* Acerca "Estado" al "Nombre" en móvil */
+  @media (max-width: 900px){
+    .grid .row{
+      grid-template-columns: 1fr; /* ya apilado */
+      gap: 2px;                   /* menos espacio entre bloques */
+      margin: 4px 0;              /* menos espacio vertical de la fila */
+    }
+    /* Ajuste fino: muy poca separación entre Nombre (1) y Estado (2) */
+    .grid .row > div:nth-child(1){ margin-bottom: 2px; }
+    .grid .row > div:nth-child(2){ margin-top: 0; }
+
+    /* Mantén los selects con algo de aire */
+    .grid .row select{
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+  
+  </style>
 </head>
 <body>
 <div class="container">
@@ -67,6 +95,7 @@
     <!-- Paso 2 -->
     <div id="step2" style="display:none;">
       <div id="encabezado"></div>
+
       <div id="detalles" class="grid"></div>
 
       <div class="controls">
@@ -75,7 +104,7 @@
         <button id="btnSalir">Salir</button>
       </div>
 
-      <!-- Comentario (solo texto, sin etiqueta) -->
+      <!-- Comentario (solo texto) -->
       <p id="comentarioAbajo" class="muted" style="display:none;"></p>
     </div>
   </div>
@@ -92,36 +121,39 @@ const titleEl = $("#titulo"), encabezado = $("#encabezado"), detallesEl = $("#de
 const btnGuardar = $("#btnGuardar"), btnReiniciarTodos = $("#btnReiniciarTodos"), btnSalir = $("#btnSalir");
 const comentarioEl = $("#comentarioAbajo");
 
-const MENSAJE = "Estamos muy felices de poder compartir contigo este momento tan especial. Tu presencia hará aún más inolvidable nuestra celebración.";
+const MENSAJE = `Estamos muy felices de poder compartir contigo este momento tan especial.<br><br>
+Por favor, confirma si nos podrás acompañar a la ceremonia, a la cena, a ambos, o si no podrás asistir al evento.`;
+
 let CURRENT = { codigo:"", nombre:"", pases:0, estado:"", comentario:"", detalles:[] };
+
 
 function nocache(u){ return u + (u.includes("?") ? "&" : "?") + "_ts=" + Date.now(); }
 function setLoading(btn, on, txt){ if(!btn) return; if(on){btn.dataset.prevText=btn.textContent;btn.textContent=txt||"Cargando...";btn.disabled=true;}else{btn.textContent=btn.dataset.prevText||btn.textContent;btn.disabled=false;} }
-/* Parser robusto (JSON o “entrecomillado”) */
 function parseAppsScript(text){ try { return JSON.parse(text); } catch (_) { return JSON.parse(JSON.parse(text)); } }
 
 function renderEncabezado() {
+  // Quitamos "Estado general", dejamos solo el nombre (en el título), mensaje y No. de pases
   encabezado.innerHTML =
     `<p class="muted" style="max-width:70%;margin:0 auto 16px;">${MENSAJE}</p>
-     <p><strong>No. de pases:</strong> ${CURRENT.pases}</p>
-     <p><strong>Estado general:</strong> ${CURRENT.estado || "Pendiente"}</p>`;
+     <p><strong>No. de pases:</strong> ${CURRENT.pases}</p>`;
 }
+
 function labelFromValue(v){ v=(v||"Pendiente").toLowerCase(); if(v==="confirmado")return"Confirmar"; if(v==="rechazado")return"No asistiré"; return"Pendiente"; }
 function valueFromLabel(l){ if(l==="Confirmar")return"Confirmado"; if(l==="No asistiré")return"Rechazado"; return"Pendiente"; }
 
+/* Listado por persona (sin encabezados) */
 function renderDetalles() {
   detallesEl.innerHTML = "";
-  const head = document.createElement("div");
-  head.className = "row";
-  head.innerHTML = `<strong>Nombre</strong><strong>Estado</strong><strong>Asistencia</strong><strong>Acción</strong>`;
-  detallesEl.appendChild(head);
-
   CURRENT.detalles.forEach(d=>{
     const row=document.createElement("div"); row.className="row";
-    const c1=document.createElement("div"); c1.textContent=d.nombre||("Invitado "+d.idx);
-    const c2=document.createElement("div"); c2.textContent=d.estado||"Pendiente";
 
-    const c3=document.createElement("div");
+    const c1=document.createElement("div"); // Nombre
+    c1.textContent=d.nombre||("Invitado "+d.idx);
+
+    const c2=document.createElement("div"); // Estado actual (texto)
+    c2.textContent=d.estado||"Pendiente";
+
+    const c3=document.createElement("div"); // Select Asistencia
     const sTipo=document.createElement("select");
     ["Ceremonia","Cena","Ambas"].forEach(lbl=>{
       const o=document.createElement("option"); o.value=lbl; o.textContent=lbl;
@@ -129,7 +161,7 @@ function renderDetalles() {
     });
     sTipo.dataset.idx=d.idx; sTipo.dataset.kind="tipo"; c3.appendChild(sTipo);
 
-    const c4=document.createElement("div");
+    const c4=document.createElement("div"); // Select Acción (estado)
     const sEst=document.createElement("select");
     ["Confirmar","No asistiré","Pendiente"].forEach(lbl=>{
       const o=document.createElement("option"); o.value=lbl; o.textContent=lbl;
@@ -142,24 +174,23 @@ function renderDetalles() {
   });
 }
 
-/* Pinta nombre + comentario apenas llega el JSON */
+/* Comentario */
 function paintComentario(texto){
   const t = (texto ?? "").toString().trim();
-  if (t) { comentarioEl.textContent = t; comentarioEl.style.display = "block"; }
-  else   { comentarioEl.textContent = ""; comentarioEl.style.display = "none"; }
+  comentarioEl.textContent = t;
+  comentarioEl.style.display = t ? "block" : "none";
 }
 
+/* Carga y pinta */
 async function cargarInvitado(codigo){
   const res = await fetch(nocache(`${apiUrl}?codigo=${encodeURIComponent(codigo)}`), { cache:"no-store" });
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   const data = parseAppsScript(text);
 
-  // Nombre y comentario DIRECTO
   titleEl.textContent = data.nombre || "Invitado";
   paintComentario(data.comentario);
 
-  // Guardar para la UI
   CURRENT = {
     codigo,
     nombre: data.nombre,
@@ -170,6 +201,7 @@ async function cargarInvitado(codigo){
   };
 }
 
+/* Flujo */
 btnContinuar.addEventListener("click", async ()=>{
   const codigo = inputCodigo.value.trim();
   if(!codigo){ msg1.textContent="Por favor ingresa tu código."; inputCodigo.focus(); return; }
@@ -178,7 +210,6 @@ btnContinuar.addEventListener("click", async ()=>{
     await cargarInvitado(codigo);
     step1.style.display="none"; step2.style.display="block";
     renderEncabezado(); renderDetalles();
-    // Asegura que el comentario quede abajo tras render
     paintComentario(CURRENT.comentario);
   }catch(e){ msg1.textContent=e.message||"No se pudo encontrar el invitado."; }
   finally{ setLoading(btnContinuar,false); }
@@ -229,12 +260,20 @@ btnReiniciarTodos.addEventListener("click", async ()=>{
   try{
     const url=nocache(`${apiUrl}?accion=reiniciar_todos&codigo=${encodeURIComponent(CURRENT.codigo)}`);
     const r=await fetch(url,{cache:"no-store"}); if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const t=await r.text(); const dj=parseAppsScript(t); if(!dj.success) throw new Error(dj.message||"No se pudo reiniciar");
-    await cargarInvitado(CURRENT.codigo);
-    renderEncabezado(); renderDetalles();
-    paintComentario(CURRENT.comentario);
-  }catch(e){ alert(e.message||"No se pudo reiniciar."); }
-  finally{ setLoading(btnReiniciarTodos,false); }
+    const t=await res.text(); // <- typo? keep original variable name
+  }catch(e){
+    // si hay error arriba, rehacemos bien la llamada
+    try{
+      const url2=nocache(`${apiUrl}?accion=reiniciar_todos&codigo=${encodeURIComponent(CURRENT.codigo)}`);
+      const r2=await fetch(url2,{cache:"no-store"}); if(!r2.ok) throw new Error(`HTTP ${r2.status}`);
+      const t2=await r2.text(); const dj2=parseAppsScript(t2); if(!dj2.success) throw new Error(dj2.message||"No se pudo reiniciar");
+      await cargarInvitado(CURRENT.codigo);
+      renderEncabezado(); renderDetalles();
+      paintComentario(CURRENT.comentario);
+    }catch(err){ alert(err.message||"No se pudo reiniciar."); }
+  }finally{
+    setLoading(btnReiniciarTodos,false);
+  }
 });
 
 btnSalir.addEventListener("click", ()=>{
@@ -242,8 +281,7 @@ btnSalir.addEventListener("click", ()=>{
   encabezado.innerHTML=""; detallesEl.innerHTML="";
   step2.style.display="none"; step1.style.display="block";
   msg1.textContent=""; inputCodigo.value=""; titleEl.textContent="CONFIRMAR ASISTENCIA";
-  paintComentario(""); // oculta la línea
-  inputCodigo.focus();
+  paintComentario(""); inputCodigo.focus();
 });
 </script>
 </body>
