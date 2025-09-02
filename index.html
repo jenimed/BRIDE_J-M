@@ -9,21 +9,8 @@
     * { box-sizing: border-box; }
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
     .container { display: flex; min-height: 100vh; }
-    .imagen {
-      flex: 1;
-      background-image: url('j%26M-54%20(1).jpg'); /* cambia el nombre si tu imagen es otra */
-      background-size: cover;
-      background-position: center;
-    }
-    .contenido {
-      flex: 1;
-      padding: 48px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-      background-color: #f7f7f7;
-    }
+    .imagen { flex: 1; background-image: url('j%26M-54%20(1).jpg'); background-size: cover; background-position: center; }
+    .contenido { flex: 1; padding: 48px; display: flex; flex-direction: column; justify-content: center; text-align: center; background-color: #f7f7f7; }
     h1 { margin-bottom: 10px; }
     p { margin: 5px 0 16px; }
     input, button, select {
@@ -34,46 +21,22 @@
     .error { color: #b00020; font-weight: normal; }
     button { cursor: pointer; background-color: #333; color: white; border: none; }
     button:hover { background-color: #555; }
-
     .grid { width: 90%; max-width: var(--maxw); margin: 0 auto; text-align: left; }
-    /* Nombre | Estado (actual) | Asistencia | Acción */
-    .grid .row {
-      display: grid;
-      grid-template-columns: 2.2fr 1fr 1.6fr 1.1fr;
-      gap: 10px; align-items: center; margin: 8px 0;
-    }
-
-    .controls {
-      display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: wrap;
-    }
+    .grid .row { display: grid; grid-template-columns: 2.2fr 1fr 1.6fr 1.1fr; gap: 10px; align-items: center; margin: 8px 0; }
+    .controls { display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
     .controls button { width: auto; display: inline-block; padding: 12px 18px; }
-
-    .commentBox {
-      width: 90%;
-      max-width: var(--maxw);
-      margin: 12px auto 0;
-      text-align: left;
-      background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 12px 16px;
-      color: #333;
-    }
-    .commentBox .label { font-weight: bold; display:block; margin-bottom: 6px; color:#444; }
-
-    /* Responsivo */
     @media (max-width: 900px) {
       .container { flex-direction: column; }
       .imagen { min-height: 36vh; }
       .contenido { padding: 28px; }
       input, button, select { width: 100%; }
       .grid { max-width: 100%; }
-      .grid .row { grid-template-columns: 1fr 1fr; } /* 2x2 en móvil */
+      .grid .row { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
       .contenido { padding: 22px; }
       body { font-size: 15px; }
-      .grid .row { grid-template-columns: 1fr; } /* 1 por fila en pantallas muy pequeñas */
+      .grid .row { grid-template-columns: 1fr; }
       .grid .row > * { margin-bottom: 2px; }
     }
   </style>
@@ -81,9 +44,7 @@
 <body>
 <div class="container">
   <div class="imagen" aria-hidden="true"></div>
-
   <div class="contenido">
-    <!-- TÍTULO dinámico (se reemplaza por el nombre del invitado en el paso 2) -->
     <h1 id="titulo">CONFIRMAR ASISTENCIA</h1>
 
     <!-- Paso 1 -->
@@ -97,14 +58,12 @@
     <!-- Paso 2 -->
     <div id="step2" style="display:none;">
       <div id="encabezado"></div>
-
       <div id="detalles" class="grid"></div>
 
-      <!-- Comentario visible (solo lectura) venido de la hoja Invitados!Comentario -->
-      <div id="comentarioBox" class="commentBox">
-        <span class="label">Comentario:</span>
-        <div id="comentarioText">(sin comentario)</div>
-      </div>
+      <!-- Comentario (texto plano, tomado de Invitados!E) -->
+      <p class="muted" style="width:90%;max-width:var(--maxw);margin:8px auto 0;text-align:left;">
+        <strong>Comentario:</strong> <span id="comentarioAbajo">(sin comentario)</span>
+      </p>
 
       <div class="controls">
         <button id="btnGuardar">Aceptar</button>
@@ -116,129 +75,84 @@
 </div>
 
 <script>
-/* 🔗 Endpoint actual (actualízalo si vuelves a desplegar) */
-const apiUrl = "https://script.google.com/macros/s/AKfycbxYxCPNJnt8Fjvo1_f1RapU1KTH8D-tPs6OHkuTOkV-EV5tnFX3GeRrR9I3QpUXcqJ4vw/exec";
+/* 👉 Usa tu nueva URL del Web App */
+const apiUrl = "https://script.google.com/macros/s/AKfycbzKwd749J3Hdgx8KThyONj6mBuPJAdXUlYnBB7A9LC_eb1ePWKRp-S2HHca8_6jkxfgTg/exec";
 
-const $ = (s)=>document.querySelector(s);
-const step1 = $("#step1");
-const step2 = $("#step2");
-const inputCodigo = $("#codigo");
-const btnContinuar = $("#btnContinuar");
-const msg1 = $("#msg1");
-const titleEl = $("#titulo");
-const encabezado = $("#encabezado");
-const detallesEl = $("#detalles");
-const btnGuardar = $("#btnGuardar");
-const btnReiniciarTodos = $("#btnReiniciarTodos");
-const btnSalir = $("#btnSalir");
-const comentarioText = $("#comentarioText");
+const $ = s => document.querySelector(s);
+const step1 = $("#step1"), step2 = $("#step2");
+const inputCodigo = $("#codigo"), btnContinuar = $("#btnContinuar"), msg1 = $("#msg1");
+const titleEl = $("#titulo"), encabezado = $("#encabezado"), detallesEl = $("#detalles");
+const btnGuardar = $("#btnGuardar"), btnReiniciarTodos = $("#btnReiniciarTodos"), btnSalir = $("#btnSalir");
+const comentarioEl = $("#comentarioAbajo");
 
 const MENSAJE = "Estamos muy felices de poder compartir contigo este momento tan especial. Tu presencia hará aún más inolvidable nuestra celebración.";
+let CURRENT = { codigo:"", nombre:"", pases:0, estado:"", comentario:"", detalles:[] };
 
-let CURRENT = { codigo: "", nombre: "", pases: 0, estado: "", comentario: "", detalles: [] };
+function nocache(u){ return u + (u.includes("?") ? "&" : "?") + "_ts=" + Date.now(); }
+function setLoading(btn, on, txt){ if(!btn) return; if(on){btn.dataset.prevText=btn.textContent;btn.textContent=txt||"Cargando...";btn.disabled=true;}else{btn.textContent=btn.dataset.prevText||btn.textContent;btn.disabled=false;} }
 
-/* Evitar caché en GET agregando timestamp */
-function nocache(url){
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}_ts=${Date.now()}`;
-}
-function setLoading(btn, loading, text){
-  if (!btn) return;
-  if (loading) { btn.dataset.prevText = btn.textContent; btn.textContent = text || "Cargando..."; btn.disabled = true; }
-  else { btn.textContent = btn.dataset.prevText || btn.textContent; btn.disabled = false; }
+/* Parser robusto por si Apps Script responde JSON “entrecomillado” */
+function parseAppsScript(text){
+  try { return JSON.parse(text); }
+  catch (_) { return JSON.parse(JSON.parse(text)); }
 }
 
-function resetFlow(){
-  CURRENT = { codigo: "", nombre: "", pases: 0, estado: "", comentario: "", detalles: [] };
-  encabezado.innerHTML = "";
-  detallesEl.innerHTML = "";
-  step2.style.display = "none";
-  step1.style.display = "block";
-  msg1.textContent = "";
-  inputCodigo.value = "";
-  comentarioText.textContent = "(sin comentario)";
-  titleEl.textContent = "CONFIRMAR ASISTENCIA";
-  inputCodigo.focus();
-}
-
+/* Pinta encabezado con mensaje, pases y estado general */
 function renderEncabezado() {
   encabezado.innerHTML =
     `<p class="muted" style="max-width:70%;margin:0 auto 16px;">${MENSAJE}</p>
      <p><strong>No. de pases:</strong> ${CURRENT.pases}</p>
      <p><strong>Estado general:</strong> ${CURRENT.estado || "Pendiente"}</p>`;
 }
+function labelFromValue(v){ v=(v||"Pendiente").toLowerCase(); if(v==="confirmado")return"Confirmar"; if(v==="rechazado")return"No asistiré"; return"Pendiente"; }
+function valueFromLabel(l){ if(l==="Confirmar")return"Confirmado"; if(l==="No asistiré")return"Rechazado"; return"Pendiente"; }
 
-function labelFromValue(v){
-  v = (v || "Pendiente").toLowerCase();
-  if (v === "confirmado") return "Confirmar";
-  if (v === "rechazado") return "No asistiré";
-  return "Pendiente";
-}
-function valueFromLabel(lbl){
-  if (lbl === "Confirmar") return "Confirmado";
-  if (lbl === "No asistiré") return "Rechazado";
-  return "Pendiente";
-}
-
+/* Lista por persona (detalle) con selección de Asistencia y Estado */
 function renderDetalles() {
   detallesEl.innerHTML = "";
-
-  // Cabecera
   const head = document.createElement("div");
   head.className = "row";
   head.innerHTML = `<strong>Nombre</strong><strong>Estado</strong><strong>Asistencia</strong><strong>Acción</strong>`;
   detallesEl.appendChild(head);
 
-  // Filas
-  CURRENT.detalles.forEach(d => {
-    const row = document.createElement("div");
-    row.className = "row";
+  CURRENT.detalles.forEach(d=>{
+    const row=document.createElement("div"); row.className="row";
+    const c1=document.createElement("div"); c1.textContent=d.nombre||("Invitado "+d.idx);
+    const c2=document.createElement("div"); c2.textContent=d.estado||"Pendiente";
 
-    const col1 = document.createElement("div");
-    col1.textContent = d.nombre || ("Invitado " + d.idx);
-
-    const col2 = document.createElement("div");
-    col2.textContent = d.estado || "Pendiente";
-
-    const col3 = document.createElement("div");
-    const selTipo = document.createElement("select");
+    const c3=document.createElement("div");
+    const sTipo=document.createElement("select");
     ["Ceremonia","Cena","Ambas"].forEach(lbl=>{
-      const opt = document.createElement("option");
-      opt.value = lbl; opt.textContent = lbl;
-      if ((d.tipo || "Ambas") === lbl) opt.selected = true;
-      selTipo.appendChild(opt);
+      const o=document.createElement("option"); o.value=lbl; o.textContent=lbl;
+      if((d.tipo||"Ambas")===lbl) o.selected=true; sTipo.appendChild(o);
     });
-    selTipo.dataset.idx = d.idx;
-    selTipo.dataset.kind = "tipo";
-    col3.appendChild(selTipo);
+    sTipo.dataset.idx=d.idx; sTipo.dataset.kind="tipo"; c3.appendChild(sTipo);
 
-    const col4 = document.createElement("div");
-    const selEstado = document.createElement("select");
+    const c4=document.createElement("div");
+    const sEst=document.createElement("select");
     ["Confirmar","No asistiré","Pendiente"].forEach(lbl=>{
-      const opt = document.createElement("option");
-      opt.value = lbl; opt.textContent = lbl;
-      if (lbl === labelFromValue(d.estado)) opt.selected = true;
-      selEstado.appendChild(opt);
+      const o=document.createElement("option"); o.value=lbl; o.textContent=lbl;
+      if(lbl===labelFromValue(d.estado)) o.selected=true; sEst.appendChild(o);
     });
-    selEstado.dataset.idx = d.idx;
-    selEstado.dataset.kind = "estado";
-    col4.appendChild(selEstado);
+    sEst.dataset.idx=d.idx; sEst.dataset.kind="estado"; c4.appendChild(sEst);
 
-    row.appendChild(col1); row.appendChild(col2); row.appendChild(col3); row.appendChild(col4);
+    row.appendChild(c1); row.appendChild(c2); row.appendChild(c3); row.appendChild(c4);
     detallesEl.appendChild(row);
   });
-
-  // Comentario (siempre visible)
-  comentarioText.textContent = (CURRENT.comentario || "").toString().trim() || "(sin comentario)";
 }
 
-async function cargarInvitado(codigo) {
-  const url = nocache(`${apiUrl}?codigo=${encodeURIComponent(codigo)}`);
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
+/* Carga datos por código y PINTA nombre + comentario de inmediato */
+async function cargarInvitado(codigo){
+  const res = await fetch(nocache(`${apiUrl}?codigo=${encodeURIComponent(codigo)}`), { cache:"no-store" });
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  const data = parseAppsScript(text);
 
+  // Imprimir nombre y comentario DIRECTO, sin esperar a nada más
+  titleEl.textContent = data.nombre || "Invitado";
+  comentarioEl.textContent = (data.comentario || "").toString().trim() || "(sin comentario)";
+
+  // Guardar para el resto de la UI
   CURRENT = {
     codigo,
     nombre: data.nombre,
@@ -247,109 +161,82 @@ async function cargarInvitado(codigo) {
     comentario: data.comentario || "",
     detalles: data.detalles || []
   };
-
-  titleEl.textContent = CURRENT.nombre || "Invitado";
-
-  /* Pintar inmediatamente el comentario por si el render se retrasa */
-  comentarioText.textContent = (CURRENT.comentario || "").toString().trim() || "(sin comentario)";
 }
 
+/* Flujo */
 btnContinuar.addEventListener("click", async ()=>{
   const codigo = inputCodigo.value.trim();
-  if (!codigo) { msg1.textContent = "Por favor ingresa tu código."; inputCodigo.focus(); return; }
-
-  msg1.textContent = "";
-  setLoading(btnContinuar, true, "Buscando...");
-  try {
+  if(!codigo){ msg1.textContent="Por favor ingresa tu código."; inputCodigo.focus(); return; }
+  msg1.textContent=""; setLoading(btnContinuar,true,"Buscando...");
+  try{
     await cargarInvitado(codigo);
-    step1.style.display = "none";
-    step2.style.display = "block";
-    renderEncabezado();
-    renderDetalles();
-  } catch (err) {
-    console.error(err);
-    msg1.textContent = err.message || "No se pudo encontrar el invitado.";
-  } finally {
-    setLoading(btnContinuar, false);
-  }
+    step1.style.display="none"; step2.style.display="block";
+    renderEncabezado(); renderDetalles();
+  }catch(e){ msg1.textContent=e.message||"No se pudo encontrar el invitado."; }
+  finally{ setLoading(btnContinuar,false); }
 });
-
-inputCodigo.addEventListener("keydown", (e)=>{ if (e.key === "Enter") btnContinuar.click(); });
+inputCodigo.addEventListener("keydown", e=>{ if(e.key==="Enter") btnContinuar.click(); });
 
 btnGuardar.addEventListener("click", async ()=>{
-  setLoading(btnGuardar, true, "Guardando...");
-  try {
-    const estadoByIdx = new Map(CURRENT.detalles.map(d => [String(d.idx), (d.estado || "Pendiente")]));
-    const tipoByIdx   = new Map(CURRENT.detalles.map(d => [String(d.idx), (d.tipo   || "Ambas")]));
+  setLoading(btnGuardar,true,"Guardando...");
+  try{
+    const estadoByIdx=new Map(CURRENT.detalles.map(d=>[String(d.idx),(d.estado||"Pendiente")]));
+    const tipoByIdx=new Map(CURRENT.detalles.map(d=>[String(d.idx),(d.tipo||"Ambas")]));
+    const cambios={};
 
-    const cambios = {};
     CURRENT.detalles.forEach(d=>{
-      const idx = String(d.idx);
-
-      const selEstado = detallesEl.querySelector(`select[data-idx="${idx}"][data-kind="estado"]`);
-      if (selEstado) {
-        const nuevoEstado = valueFromLabel(selEstado.value);
-        const actualEstado = estadoByIdx.get(idx) || "Pendiente";
-        if (nuevoEstado !== actualEstado) {
-          if (!cambios[idx]) cambios[idx] = {};
-          cambios[idx].estado = nuevoEstado;
-        }
+      const idx=String(d.idx);
+      const selEst=detallesEl.querySelector(`select[data-idx="${idx}"][data-kind="estado"]`);
+      if(selEst){
+        const nuevo=valueFromLabel(selEst.value);
+        const actual=estadoByIdx.get(idx)||"Pendiente";
+        if(nuevo!==actual){ if(!cambios[idx]) cambios[idx]={}; cambios[idx].estado=nuevo; }
       }
-
-      const selTipo = detallesEl.querySelector(`select[data-idx="${idx}"][data-kind="tipo"]`);
-      if (selTipo) {
-        const nuevoTipo = selTipo.value || "Ambas";
-        const actualTipo = tipoByIdx.get(idx) || "Ambas";
-        if (nuevoTipo !== actualTipo) {
-          if (!cambios[idx]) cambios[idx] = {};
-          cambios[idx].tipo = nuevoTipo;
-        }
+      const selTipo=detallesEl.querySelector(`select[data-idx="${idx}"][data-kind="tipo"]`);
+      if(selTipo){
+        const nuevo=selTipo.value||"Ambas";
+        const actual=tipoByIdx.get(idx)||"Ambas";
+        if(nuevo!==actual){ if(!cambios[idx]) cambios[idx]={}; cambios[idx].tipo=nuevo; }
       }
     });
 
-    const idxs = Object.keys(cambios);
-    for (const idx of idxs) {
-      const ch = cambios[idx];
-      const url = nocache(`${apiUrl}?accion=actualizar_detalle&codigo=${encodeURIComponent(CURRENT.codigo)}&idx=${encodeURIComponent(idx)}${ch.estado ? `&estado=${encodeURIComponent(ch.estado)}` : ''}${ch.tipo ? `&tipo=${encodeURIComponent(ch.tipo)}` : ''}`);
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message || "No se pudo actualizar");
+    const idxs=Object.keys(cambios);
+    for(const idx of idxs){
+      const ch=cambios[idx];
+      const url=nocache(`${apiUrl}?accion=actualizar_detalle&codigo=${encodeURIComponent(CURRENT.codigo)}&idx=${encodeURIComponent(idx)}${ch.estado?`&estado=${encodeURIComponent(ch.estado)}`:''}${ch.tipo?`&tipo=${encodeURIComponent(ch.tipo)}`:''}`);
+      const r=await fetch(url,{cache:"no-store"}); if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      const t=await r.text(); const dj=parseAppsScript(t); if(!dj.success) throw new Error(dj.message||"No se pudo actualizar");
     }
 
     await cargarInvitado(CURRENT.codigo);
-    renderEncabezado();
-    renderDetalles();
+    renderEncabezado(); renderDetalles();
+    // Vuelve a pintar comentario directo tras guardar
+    comentarioEl.textContent = (CURRENT.comentario || "").toString().trim() || "(sin comentario)";
     alert("Actualizado.");
-  } catch (err) {
-    console.error(err);
-    alert(err.message || "No se pudo guardar.");
-  } finally {
-    setLoading(btnGuardar, false);
-  }
+  }catch(e){ alert(e.message||"No se pudo guardar."); }
+  finally{ setLoading(btnGuardar,false); }
 });
 
 btnReiniciarTodos.addEventListener("click", async ()=>{
-  setLoading(btnReiniciarTodos, true, "Reiniciando...");
-  try {
-    const url = nocache(`${apiUrl}?accion=reiniciar_todos&codigo=${encodeURIComponent(CURRENT.codigo)}`);
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message || "No se pudo reiniciar");
+  setLoading(btnReiniciarTodos,true,"Reiniciando...");
+  try{
+    const url=nocache(`${apiUrl}?accion=reiniciar_todos&codigo=${encodeURIComponent(CURRENT.codigo)}`);
+    const r=await fetch(url,{cache:"no-store"}); if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const t=await r.text(); const dj=parseAppsScript(t); if(!dj.success) throw new Error(dj.message||"No se pudo reiniciar");
     await cargarInvitado(CURRENT.codigo);
-    renderEncabezado();
-    renderDetalles();
-  } catch (err) {
-    console.error(err);
-    alert(err.message || "No se pudo reiniciar.");
-  } finally {
-    setLoading(btnReiniciarTodos, false);
-  }
+    renderEncabezado(); renderDetalles();
+    comentarioEl.textContent = (CURRENT.comentario || "").toString().trim() || "(sin comentario)";
+  }catch(e){ alert(e.message||"No se pudo reiniciar."); }
+  finally{ setLoading(btnReiniciarTodos,false); }
 });
 
-btnSalir.addEventListener("click", resetFlow);
+btnSalir.addEventListener("click", ()=>{
+  CURRENT={codigo:"",nombre:"",pases:0,estado:"",comentario:"",detalles:[]};
+  encabezado.innerHTML=""; detallesEl.innerHTML="";
+  step2.style.display="none"; step1.style.display="block";
+  msg1.textContent=""; inputCodigo.value=""; titleEl.textContent="CONFIRMAR ASISTENCIA";
+  comentarioEl.textContent="(sin comentario)"; inputCodigo.focus();
+});
 </script>
 </body>
 </html>
-
